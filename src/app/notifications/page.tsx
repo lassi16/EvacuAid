@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useIncidentStore, Notification } from "@/stores/incidentStore"
 
 const ROLE_COLORS: Record<string, string> = {
-  'Global Admin':   '#818CF8',
+  'Global Admin':   '#0284c7',
   'Fire Dept':      '#EF4444',
   'Medical Staff':  '#F97316',
   'Security Team':  '#EAB308',
@@ -62,11 +62,11 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Notification Center</h1>
-          <p className="text-gray-400 text-sm">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">Notification Center</h1>
+          <p className="text-slate-500 text-sm">
             Track delivery and response rates for critical alerts.
             {mapLinkedCount > 0 && (
-              <span style={{ marginLeft: 10, color: '#818CF8', fontWeight: 500 }}>
+              <span style={{ marginLeft: 10, color: '#0284c7', fontWeight: 500 }}>
                 · {mapLinkedCount} from Building Map
               </span>
             )}
@@ -76,8 +76,8 @@ export default function NotificationsPage() {
           <Link href="/map" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px',
             borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-            background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.35)',
-            color: '#818CF8',
+            background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.35)',
+            color: '#0284c7',
           }}>
             🗺 Open Map
           </Link>
@@ -88,8 +88,8 @@ export default function NotificationsPage() {
               onChange={e => setSearch(e.target.value)}
               placeholder="Search user, role, incident…"
               style={{
-                background: '#111c32', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8,
-                padding: '7px 12px 7px 32px', fontSize: 12, color: '#F1F5F9', outline: 'none', width: 220,
+                background: '#ffffff', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 8,
+                padding: '7px 12px 7px 32px', fontSize: 12, color: '#0f172a', outline: 'none', width: 220,
               }}
             />
           </div>
@@ -99,14 +99,14 @@ export default function NotificationsPage() {
       {/* Summary tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10 }}>
         {[
-          { label: 'Total Alerts',  value: notifications.length,  color: '#818CF8', icon: '🔔' },
+          { label: 'Total Alerts',  value: notifications.length,  color: '#0284c7', icon: '🔔' },
           { label: 'Unread',        value: unreadCount(),          color: '#F59E0B', icon: '📬' },
           { label: 'Escalated',     value: escalatedCount,         color: '#EF4444', icon: '🚨' },
           { label: 'ACK Rate',      value: `${ackRate}%`,          color: '#34D399', icon: '✅' },
-          { label: 'Map-Linked',    value: mapLinkedCount,         color: '#818CF8', icon: '🗺' },
+          { label: 'Map-Linked',    value: mapLinkedCount,         color: '#0284c7', icon: '🗺' },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{
-            background: '#111c32', border: `1px solid ${color}30`, borderRadius: 10, padding: '12px 16px',
+            background: '#ffffff', border: `1px solid ${color}30`, borderRadius: 10, padding: '12px 16px',
           }}>
             <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{icon} {label}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color }}>{value}</div>
@@ -116,26 +116,26 @@ export default function NotificationsPage() {
 
       {/* Filters */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <Bell className="h-3 w-3 text-gray-500" />
+        <Bell className="h-3 w-3 text-slate-500" />
         {([['all', 'All'], ['unack', 'Unacknowledged'], ['ack', 'Acknowledged']] as [string, string][]).map(([val, label]) => (
           <button key={val} onClick={() => setFilterAck(val as 'all' | 'ack' | 'unack')} style={{
             padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            background: filterAck === val ? 'rgba(99,102,241,0.15)' : 'transparent',
-            color: filterAck === val ? '#818CF8' : '#475569',
-            border: `1px solid ${filterAck === val ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.1)'}`,
+            background: filterAck === val ? 'rgba(14,165,233,0.15)' : 'transparent',
+            color: filterAck === val ? '#0284c7' : '#475569',
+            border: `1px solid ${filterAck === val ? 'rgba(14,165,233,0.35)' : 'rgba(14,165,233,0.1)'}`,
           }}>{label}</button>
         ))}
         <button onClick={() => setFilterEsc(e => !e)} style={{
           padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
           background: filterEsc ? 'rgba(239,68,68,0.15)' : 'transparent',
           color: filterEsc ? '#F87171' : '#475569',
-          border: `1px solid ${filterEsc ? 'rgba(239,68,68,0.35)' : 'rgba(99,102,241,0.1)'}`,
+          border: `1px solid ${filterEsc ? 'rgba(239,68,68,0.35)' : 'rgba(14,165,233,0.1)'}`,
         }}>🚨 Escalated Only</button>
         <button onClick={() => setFilterMap(m => !m)} style={{
           padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-          background: filterMap ? 'rgba(99,102,241,0.15)' : 'transparent',
-          color: filterMap ? '#818CF8' : '#475569',
-          border: `1px solid ${filterMap ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.1)'}`,
+          background: filterMap ? 'rgba(14,165,233,0.15)' : 'transparent',
+          color: filterMap ? '#0284c7' : '#475569',
+          border: `1px solid ${filterMap ? 'rgba(14,165,233,0.35)' : 'rgba(14,165,233,0.1)'}`,
         }}>🗺 Map Only</button>
         <span style={{ fontSize: 11, color: '#475569', marginLeft: 'auto' }}>{filtered.length} records</span>
       </div>
@@ -149,10 +149,10 @@ export default function NotificationsPage() {
 
           return (
             <div key={n.id} style={{
-              background: n.opened ? '#111c32' : '#0f1e38',
+              background: n.opened ? '#ffffff' : '#f0f9ff',
               border: n.escalated
                 ? '1px solid rgba(239,68,68,0.35)'
-                : n.opened ? '1px solid rgba(99,102,241,0.12)' : '1px solid rgba(99,102,241,0.3)',
+                : n.opened ? '1px solid rgba(14,165,233,0.12)' : '1px solid rgba(14,165,233,0.3)',
               borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.15s',
             }}>
               <div
@@ -163,11 +163,11 @@ export default function NotificationsPage() {
                 }}
               >
                 {/* Unread dot */}
-                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: n.opened ? 'transparent' : '#6366F1', boxShadow: n.opened ? 'none' : '0 0 6px rgba(99,102,241,0.6)' }} />
+                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: n.opened ? 'transparent' : '#0ea5e9', boxShadow: n.opened ? 'none' : '0 0 6px rgba(14,165,233,0.6)' }} />
 
                 {/* User + Role */}
                 <div style={{ minWidth: 140, flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9' }}>{n.user}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{n.user}</div>
                   <div style={{ fontSize: 10, fontWeight: 600, color: roleColor, textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 1 }}>{n.role}</div>
                 </div>
 
@@ -219,8 +219,8 @@ export default function NotificationsPage() {
 
               {/* Expanded detail */}
               {isExpanded && (
-                <div style={{ padding: '0 16px 14px', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: 12 }}>
-                  <div style={{ fontSize: 12, color: '#94A3B8', background: '#0d1526', borderRadius: 8, padding: '10px 12px', marginBottom: 12, lineHeight: 1.6, border: '1px solid rgba(99,102,241,0.1)' }}>
+                <div style={{ padding: '0 16px 14px', borderTop: '1px solid rgba(14,165,233,0.1)', paddingTop: 12 }}>
+                  <div style={{ fontSize: 12, color: '#94A3B8', background: '#f8fafc', borderRadius: 8, padding: '10px 12px', marginBottom: 12, lineHeight: 1.6, border: '1px solid rgba(14,165,233,0.1)' }}>
                     {n.message}
                   </div>
 
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
                     {n.incident?.mapLinked && (
                       <Link href="/map" style={{
                         padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600,
-                        background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)',
+                        background: 'rgba(14,165,233,0.15)', color: '#0284c7', border: '1px solid rgba(14,165,233,0.3)',
                         textDecoration: 'none',
                       }}>
                         🗺 View on Map
@@ -261,7 +261,7 @@ export default function NotificationsPage() {
                     )}
                     <Link href="/incidents" style={{
                       padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600,
-                      background: 'transparent', color: '#475569', border: '1px solid rgba(99,102,241,0.1)',
+                      background: 'transparent', color: '#475569', border: '1px solid rgba(14,165,233,0.1)',
                       textDecoration: 'none',
                     }}>
                       → Incident Detail

@@ -51,10 +51,10 @@ export default function RoutingPathControls() {
   }, [allNodes, emergencyByNodeId])
 
   return (
-    <div className="routing-panel" style={{ width: 240, display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
 
       {/* Scrollable top section */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ flex: 1, padding: '4px 0px 14px 0px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
       {/* Scenario loader */}
       <div>
@@ -252,7 +252,7 @@ export default function RoutingPathControls() {
       </div>{/* end scrollable */}
 
       {/* Sticky bottom action area */}
-      <div style={{ padding: '12px 14px', borderTop: '1px solid var(--routing-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--routing-bg-card)', flexShrink: 0 }}>
+      <div style={{ paddingTop: 14, borderTop: '1px solid var(--routing-border)', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         {error && (
           <div className="routing-badge routing-badge-danger" style={{ width: '100%', justifyContent: 'center', padding: '7px 12px', borderRadius: 7, fontSize: 12 }}>
             {error}

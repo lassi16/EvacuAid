@@ -1,6 +1,6 @@
 'use client'
 /**
- * Central SafeSphere Incident Store
+ * Central EvacuAid Incident Store
  * ──────────────────────────────────
  * Single source of truth that connects:
  *  - Building Map emergency nodes  (from routingNavigationStore / routingEditorStore)

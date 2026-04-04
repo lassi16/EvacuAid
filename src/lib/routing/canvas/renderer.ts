@@ -1,16 +1,16 @@
 import { MapNode, MapEdge, NodeType } from '@/lib/routing/graph/types'
 
-export const NODE_RADIUS = 20
+export const NODE_RADIUS = 30
 export const GRID_SIZE = 20
 
 export const NODE_COLORS: Record<NodeType, { fill: string; stroke: string; text: string }> = {
-  room:      { fill: '#1e3a5f', stroke: '#3B82F6', text: '#93C5FD' },
-  corridor:  { fill: '#1f2937', stroke: '#6B7280', text: '#9CA3AF' },
-  stair:     { fill: '#431407', stroke: '#F97316', text: '#FED7AA' },
-  elevator:  { fill: '#3b0764', stroke: '#A855F7', text: '#D8B4FE' },
-  entry:     { fill: '#14532d', stroke: '#22C55E', text: '#86EFAC' },
-  exit:      { fill: '#450a0a', stroke: '#EF4444', text: '#FCA5A5' },
-  door:      { fill: '#422006', stroke: '#EAB308', text: '#FDE047' },
+  room:      { fill: '#e0f2fe', stroke: '#0284c7', text: '#0c4a6e' },
+  corridor:  { fill: '#f8fafc', stroke: '#94a3b8', text: '#475569' },
+  stair:     { fill: '#ffedd5', stroke: '#ea580c', text: '#7c2d12' },
+  elevator:  { fill: '#f3e8ff', stroke: '#9333ea', text: '#581c87' },
+  entry:     { fill: '#dcfce7', stroke: '#16a34a', text: '#14532d' },
+  exit:      { fill: '#fee2e2', stroke: '#dc2626', text: '#7f1d1d' },
+  door:      { fill: '#fef9c3', stroke: '#ca8a04', text: '#713f12' },
 }
 
 export function drawGrid(
@@ -26,13 +26,13 @@ export function drawGrid(
   ctx.save()
   for (let x = startX; x < width; x += GRID_SIZE) {
     const isMajor = Math.round((x - startX) / GRID_SIZE + Math.floor(offsetX / GRID_SIZE)) % 5 === 0
-    ctx.strokeStyle = isMajor ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.07)'
+    ctx.strokeStyle = isMajor ? 'rgba(14,165,233,0.15)' : 'rgba(14,165,233,0.06)'
     ctx.lineWidth = isMajor ? 1 : 0.5
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke()
   }
   for (let y = startY; y < height; y += GRID_SIZE) {
     const isMajor = Math.round((y - startY) / GRID_SIZE + Math.floor(offsetY / GRID_SIZE)) % 5 === 0
-    ctx.strokeStyle = isMajor ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.07)'
+    ctx.strokeStyle = isMajor ? 'rgba(14,165,233,0.15)' : 'rgba(14,165,233,0.06)'
     ctx.lineWidth = isMajor ? 1 : 0.5
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke()
   }
@@ -49,7 +49,8 @@ export function drawEdge(
   pathHighlight: boolean,
   animOffset: number,
   ox: number,
-  oy: number
+  oy: number,
+  reverseAnim?: boolean
 ) {
   const fx = from.x + ox, fy = from.y + oy
   const tx = to.x + ox, ty = to.y + oy
@@ -59,27 +60,27 @@ export function drawEdge(
   if (edge.blocked) {
     ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 2; ctx.setLineDash([4, 4])
   } else if (pathHighlight) {
-    ctx.strokeStyle = '#6366F1'; ctx.lineWidth = 4; ctx.setLineDash([8, 4])
-    ctx.lineDashOffset = -animOffset
-    ctx.shadowColor = '#818CF8'; ctx.shadowBlur = 8
+    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 4; ctx.setLineDash([8, 4])
+    ctx.lineDashOffset = reverseAnim ? animOffset : -animOffset
+    ctx.shadowColor = '#0ea5e9'; ctx.shadowBlur = 8
   } else if (edge.danger) {
     ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 2; ctx.setLineDash([4, 4])
   } else if (selected) {
-    ctx.strokeStyle = '#6366F1'; ctx.lineWidth = 3; ctx.setLineDash([])
+    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 3; ctx.setLineDash([])
   } else if (hovered) {
-    ctx.strokeStyle = '#818CF8'; ctx.lineWidth = 2; ctx.setLineDash([])
+    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.setLineDash([])
   } else {
-    ctx.strokeStyle = 'rgba(148,163,184,0.35)'; ctx.lineWidth = 1.5; ctx.setLineDash([])
+    ctx.strokeStyle = 'rgba(100,116,139,0.35)'; ctx.lineWidth = 1.5; ctx.setLineDash([])
   }
   ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke()
   ctx.setLineDash([])
 
   // Weight label
   if (!pathHighlight) {
-    ctx.font = '10px Inter, sans-serif'
-    ctx.fillStyle = edge.blocked ? '#EF4444' : edge.danger ? '#F59E0B' : 'rgba(148,163,184,0.5)'
+    ctx.font = 'bold 12px Inter, sans-serif'
+    ctx.fillStyle = edge.blocked ? '#EF4444' : edge.danger ? '#F59E0B' : 'rgba(100,116,139,0.8)'
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'
-    ctx.fillText(String(edge.weight), mx, my - 3)
+    ctx.fillText(String(edge.weight), mx, my - 4)
   }
   ctx.restore()
 }
@@ -104,7 +105,7 @@ export function drawNode(
   } else if (node.blocked) {
     ctx.shadowColor = '#EF4444'; ctx.shadowBlur = 12
   } else if (pathHighlight) {
-    ctx.shadowColor = '#6366F1'; ctx.shadowBlur = 16
+    ctx.shadowColor = '#0ea5e9'; ctx.shadowBlur = 16
   } else if (selected) {
     ctx.shadowColor = colors.stroke; ctx.shadowBlur = 14
   }
@@ -113,7 +114,7 @@ export function drawNode(
   if (selected || pathHighlight) {
     ctx.beginPath()
     ctx.arc(cx, cy, NODE_RADIUS + 5, 0, Math.PI * 2)
-    ctx.strokeStyle = pathHighlight ? '#6366F1' : colors.stroke
+    ctx.strokeStyle = pathHighlight ? '#0284c7' : colors.stroke
     ctx.lineWidth = 2
     ctx.setLineDash([4, 3])
     ctx.stroke()
@@ -123,7 +124,7 @@ export function drawNode(
   // Node circle fill
   ctx.beginPath()
   ctx.arc(cx, cy, NODE_RADIUS, 0, Math.PI * 2)
-  ctx.fillStyle = node.blocked ? '#450a0a' : node.danger ? '#422006' : colors.fill
+  ctx.fillStyle = node.blocked ? '#fecaca' : node.danger ? '#fef3c7' : colors.fill
   ctx.fill()
   ctx.strokeStyle = node.blocked ? '#EF4444' : node.danger ? '#F59E0B' : colors.stroke
   ctx.lineWidth = hovered ? 2.5 : 1.5
@@ -132,27 +133,35 @@ export function drawNode(
   // Path index bubble
   if (pathIndex !== null) {
     ctx.beginPath()
-    ctx.arc(cx + NODE_RADIUS - 6, cy - NODE_RADIUS + 6, 8, 0, Math.PI * 2)
-    ctx.fillStyle = '#6366F1'
+    ctx.arc(cx + NODE_RADIUS - 8, cy - NODE_RADIUS + 8, 10, 0, Math.PI * 2)
+    ctx.fillStyle = '#0284c7'
     ctx.fill()
-    ctx.font = 'bold 9px Inter, sans-serif'
+    ctx.font = 'bold 11px Inter, sans-serif'
     ctx.fillStyle = '#fff'
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(String(pathIndex + 1), cx + NODE_RADIUS - 6, cy - NODE_RADIUS + 6)
+    ctx.fillText(String(pathIndex + 1), cx + NODE_RADIUS - 8, cy - NODE_RADIUS + 8)
   }
 
   // Icon
-  ctx.font = '13px serif'
+  ctx.font = '20px serif'
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillText(getNodeIcon(node.type), cx, cy)
+  ctx.fillText(getNodeIcon(node.type), cx, cy + 2)
 
   // Label
-  ctx.font = '10px Inter, sans-serif'
-  ctx.fillStyle = node.blocked ? '#FCA5A5' : node.danger ? '#FDE047' : colors.text
-  ctx.textAlign = 'center'; ctx.textBaseline = 'top'
-  const maxLen = 12
+  ctx.font = '500 12px Inter, sans-serif'
+  const maxLen = 15
   const label = node.label.length > maxLen ? node.label.slice(0, maxLen) + '…' : node.label
-  ctx.fillText(label, cx, cy + NODE_RADIUS + 4)
+  const tw = ctx.measureText(label).width
+  
+  const labelY = cy + NODE_RADIUS + 16
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.beginPath()
+  ctx.roundRect(cx - tw / 2 - 4, labelY - 2, tw + 8, 16, 4)
+  ctx.fill()
+
+  ctx.fillStyle = node.blocked ? '#991b1b' : node.danger ? '#92400e' : colors.text
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'
+  ctx.fillText(label, cx, labelY)
 
   ctx.restore()
 }

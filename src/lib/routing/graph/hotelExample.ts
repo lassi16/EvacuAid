@@ -15,6 +15,8 @@ function createFloor(floorId: number): Floor {
   const edges: MapEdge[] = []
 
   const addNode = (node: MapNode) => {
+    node.x = Math.round(node.x * 1.6)
+    node.y = Math.round(node.y * 1.6)
     nodes.push(node)
     nodeMap.set(node.id, node)
   }

@@ -1,6 +1,6 @@
 import { Building } from '@/lib/routing/graph/types'
 
-const STORAGE_KEY = 'safesphere-indoor-map-building'
+const STORAGE_KEY = 'evacuaid-indoor-map-building-v2'
 
 export function saveBuilding(building: Building): void {
   try {

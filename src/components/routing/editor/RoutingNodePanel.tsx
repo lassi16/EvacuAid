@@ -20,7 +20,7 @@ export default function RoutingNodePanel() {
 
   if (!node) {
     return (
-      <div className="routing-panel-right" style={{ width: 220, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ width: '100%', padding: '4px 0px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontSize: 11, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Properties</div>
         <div style={{ color: 'var(--routing-text-muted)', fontSize: 13, textAlign: 'center', marginTop: 40, lineHeight: 1.7 }}>
           Select a node or edge to view and edit its properties.
@@ -43,7 +43,7 @@ export default function RoutingNodePanel() {
   const floor = building.floors.find(f => f.id === node.floorId)
 
   return (
-    <div className="routing-panel-right routing-animate-fade-in" style={{ width: 220, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="routing-animate-fade-in" style={{ width: '100%', padding: '4px 0px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Node Properties</div>
         <span className="routing-badge routing-badge-primary" style={{ fontSize: 10 }}>{node.type}</span>
