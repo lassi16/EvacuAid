@@ -18,7 +18,7 @@ export default function RoutingFloorManager() {
   }
 
   return (
-    <div className="routing-panel" style={{ width: 200, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ width: '100%', padding: '4px 0px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* Building name */}
       <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--routing-text-primary)', marginBottom: 4 }}>
         🏢 {building.name}

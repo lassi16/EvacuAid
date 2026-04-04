@@ -32,7 +32,7 @@ export default function RoutingFloorCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const animRef = useRef<number>(0)
   const animOffset = useRef<number>(0)
-  const [zoomLevel, setZoomLevel] = useState(0.75)
+  const [zoomLevel, setZoomLevel] = useState(1.2)
 
   const stateRef = useRef({
     isDragging: false, dragNodeId: null as string | null,
@@ -43,7 +43,7 @@ export default function RoutingFloorCanvas() {
     mouseX: 0, mouseY: 0,
     hoverNodeId: null as string | null,
     hoverEdgeId: null as string | null,
-    zoom: 0.75,
+    zoom: 1.2,
   })
 
   const store = useRoutingEditorStore()
@@ -71,8 +71,8 @@ export default function RoutingFloorCanvas() {
   }, [])
 
   const handleZoomReset = useCallback(() => {
-    stateRef.current.zoom = 1.0
-    setZoomLevel(1.0)
+    stateRef.current.zoom = 1.2
+    setZoomLevel(1.2)
   }, [])
 
   const snap = useCallback((x: number, y: number) => {
@@ -106,7 +106,7 @@ export default function RoutingFloorCanvas() {
     const w = canvas.width, h = canvas.height
 
     ctx.clearRect(0, 0, w, h)
-    ctx.fillStyle = '#0D1526'
+    ctx.fillStyle = '#f8fafc'
     ctx.fillRect(0, 0, w, h)
 
     drawGrid(ctx, w, h, panOffsetX, panOffsetY)
@@ -136,7 +136,7 @@ export default function RoutingFloorCanvas() {
       const startNode = nm.get(esn)
       if (startNode) {
         ctx.save()
-        ctx.strokeStyle = 'rgba(99,102,241,0.8)'
+        ctx.strokeStyle = 'rgba(14,165,233,0.8)'
         ctx.lineWidth = 2; ctx.setLineDash([6, 4])
         ctx.beginPath()
         ctx.moveTo(startNode.x, startNode.y)
@@ -157,7 +157,7 @@ export default function RoutingFloorCanvas() {
       if (sn) {
         ctx.save()
         ctx.beginPath(); ctx.arc(sn.x, sn.y, NODE_RADIUS + 8, 0, Math.PI * 2)
-        ctx.strokeStyle = '#6366F1'; ctx.lineWidth = 2.5; ctx.setLineDash([5, 3])
+        ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 2.5; ctx.setLineDash([5, 3])
         ctx.stroke(); ctx.setLineDash([])
         ctx.restore()
       }
@@ -200,6 +200,13 @@ export default function RoutingFloorCanvas() {
     const clickedNode = findNodeAt(mapX, mapY)
     const clickedEdge = clickedNode ? null : findEdgeAt(mapX, mapY)
 
+    // Universal Pan on Middle(1) / Right(2) click or explicit Pan tool
+    if (e.button === 1 || e.button === 2 || activeTool === 'pan') {
+      s.isPanning = true; s.panStartX = offsetX; s.panStartY = offsetY
+      s.panStartOX = s.panOffsetX; s.panStartOY = s.panOffsetY
+      return
+    }
+
     if (activeTool === 'select') {
       if (clickedNode) {
         setSelectedNode(clickedNode.id); setSelectedEdge(null)
@@ -209,10 +216,10 @@ export default function RoutingFloorCanvas() {
         setSelectedEdge(clickedEdge.id); setSelectedNode(null)
       } else {
         setSelectedNode(null); setSelectedEdge(null)
+        // Auto-pan if dragging empty canvas with select tool
+        s.isPanning = true; s.panStartX = offsetX; s.panStartY = offsetY
+        s.panStartOX = s.panOffsetX; s.panStartOY = s.panOffsetY
       }
-    } else if (activeTool === 'pan') {
-      s.isPanning = true; s.panStartX = offsetX; s.panStartY = offsetY
-      s.panStartOX = s.panOffsetX; s.panStartOY = s.panOffsetY
     } else if (activeTool === 'draw-edge') {
       if (clickedNode) {
         const esn = stateRef.current.edgeStartNodeId ?? edgeStartNodeId
@@ -300,28 +307,44 @@ export default function RoutingFloorCanvas() {
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
         onContextMenu={onContextMenu}
+        onWheel={e => {
+          e.preventDefault()
+          const dz = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+          const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, parseFloat((stateRef.current.zoom + dz).toFixed(2))))
+          stateRef.current.zoom = next
+          setZoomLevel(next)
+        }}
       />
 
       {/* Zoom controls */}
       <div style={{
-        position: 'absolute', top: 10, right: 12,
-        display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',
+        position: 'absolute', bottom: 32, right: 24,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        background: 'rgba(13,21,38,0.85)', padding: '12px 8px', borderRadius: 12,
+        border: '1px solid var(--routing-border)', backdropFilter: 'blur(8px)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
       }}>
         <button style={btnStyle} onClick={handleZoomIn} title="Zoom in (+5%)">＋</button>
+        <div style={{ height: 120, width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <input 
+            type="range" min={ZOOM_MIN} max={ZOOM_MAX} step={ZOOM_STEP} value={zoomLevel}
+            onChange={e => { stateRef.current.zoom = parseFloat(e.target.value); setZoomLevel(stateRef.current.zoom) }}
+            style={{ width: '120px', transform: 'rotate(-90deg)', transformOrigin: 'center', cursor: 'pointer' }}
+          />
+        </div>
+        <button style={btnStyle} onClick={handleZoomOut} title="Zoom out (-5%)">－</button>
         <div style={{
-          fontSize: 10, color: 'var(--routing-text-muted)', fontFamily: 'monospace',
-          background: 'rgba(13,21,38,0.85)', padding: '2px 6px', borderRadius: 4,
-          border: '1px solid var(--routing-border)', textAlign: 'center', minWidth: 38,
-          cursor: 'pointer',
+          fontSize: 11, color: 'var(--routing-text-muted)', fontFamily: 'monospace',
+          padding: '4px 2px', textAlign: 'center', minWidth: 42,
+          cursor: 'pointer', fontWeight: 600, marginTop: 4,
         }} onClick={handleZoomReset} title="Click to reset zoom">
           {Math.round(zoomLevel * 100)}%
         </div>
-        <button style={btnStyle} onClick={handleZoomOut} title="Zoom out (-5%)">－</button>
       </div>
 
       {/* Status bar */}
       <div style={{
-        position: 'absolute', bottom: 10, right: 12,
+        position: 'absolute', bottom: 32, right: 88,
         fontSize: 11, color: 'var(--routing-text-muted)', fontFamily: 'monospace',
         background: 'rgba(13,21,38,0.8)', padding: '4px 10px', borderRadius: 5,
         border: '1px solid var(--routing-border)',

@@ -8,7 +8,7 @@ export default function RoutingStepList() {
 
   if (isComputing) {
     return (
-      <div className="routing-panel-right routing-animate-fade-in" style={{ width: 280, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="routing-animate-fade-in" style={{ width: '100%', padding: '24px 0px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--routing-text-muted)' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <div>Computing path…</div>
@@ -19,7 +19,7 @@ export default function RoutingStepList() {
 
   if (!path) {
     return (
-      <div className="routing-panel-right" style={{ width: 280, padding: 16 }}>
+      <div style={{ width: '100%', padding: '4px 0px' }}>
         <div style={{ fontSize: 11, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Navigation Steps</div>
         <div style={{ textAlign: 'center', color: 'var(--routing-text-muted)', marginTop: 60 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🧭</div>
@@ -36,7 +36,7 @@ export default function RoutingStepList() {
   const endFloor = building.floors.find(f => f.id === endNode?.floorId)
 
   return (
-    <div className="routing-panel-right routing-animate-fade-in" style={{ width: 280, padding: 14, display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
+    <div className="routing-animate-fade-in" style={{ width: '100%', padding: '4px 0px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
 
       {/* Summary */}
       <div style={{ background: 'var(--routing-bg-surface)', borderRadius: 8, padding: 12, border: '1px solid var(--routing-border)' }}>
@@ -61,7 +61,7 @@ export default function RoutingStepList() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginTop: 4 }}>
           <span style={{ color: 'var(--routing-text-muted)' }}>Cost</span>
-          <span style={{ color: '#818CF8', fontFamily: 'monospace' }}>{path.totalCost.toFixed(1)}</span>
+          <span style={{ color: '#0284c7', fontFamily: 'monospace' }}>{path.totalCost.toFixed(1)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginTop: 4 }}>
           <span style={{ color: 'var(--routing-text-muted)' }}>Compute time</span>

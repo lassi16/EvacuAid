@@ -14,8 +14,8 @@ export default function RoutingMapViewer() {
   const animRef = useRef<number>(0)
   const animOffset = useRef<number>(0)
   const panRef = useRef({ ox: 60, oy: 60 })
-  const zoomRef = useRef(0.75)
-  const [zoomLevel, setZoomLevel] = useState(0.75)
+  const zoomRef = useRef(1.2)
+  const [zoomLevel, setZoomLevel] = useState(1.2)
 
   const { building } = useRoutingEditorStore()
   const { path, activeViewFloor, emergencyByNodeId } = useRoutingNavigationStore()
@@ -23,20 +23,18 @@ export default function RoutingMapViewer() {
   const activeFloor = building.floors.find(f => f.id === activeViewFloor)
 
   const pathNodeSet = new Set(path?.nodeIds ?? [])
-  const pathEdgeSet = new Set<string>()
+  const pathEdgeDir = new Map<string, boolean>()
 
-  // Build path edge set
+  // Build path edge set and directionality
   if (path && activeFloor) {
     const nm = new Map(activeFloor.nodes.map(n => [n.id, n]))
     const ids = path.nodeIds
     for (let i = 0; i < ids.length - 1; i++) {
-      const f = nm.get(ids[i]); const t = nm.get(ids[i + 1])
-      if (f && t) {
-        activeFloor.edges.forEach(e => {
-          if ((e.from === ids[i] && e.to === ids[i + 1]) || (e.from === ids[i + 1] && e.to === ids[i]))
-            pathEdgeSet.add(e.id)
-        })
-      }
+      const u = ids[i]; const v = ids[i + 1]
+      activeFloor.edges.forEach(e => {
+        if (e.from === u && e.to === v) pathEdgeDir.set(e.id, false)
+        else if (e.from === v && e.to === u) pathEdgeDir.set(e.id, true)
+      })
     }
   }
 
@@ -54,8 +52,8 @@ export default function RoutingMapViewer() {
   }, [])
 
   const handleZoomReset = useCallback(() => {
-    zoomRef.current = 1.0
-    setZoomLevel(1.0)
+    zoomRef.current = 1.2
+    setZoomLevel(1.2)
   }, [])
 
   const draw = useCallback(() => {
@@ -68,7 +66,7 @@ export default function RoutingMapViewer() {
     const w = canvas.width, h = canvas.height
 
     ctx.clearRect(0, 0, w, h)
-    ctx.fillStyle = '#0D1526'
+    ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, w, h)
     drawGrid(ctx, w, h, ox, oy)
 
@@ -86,14 +84,16 @@ export default function RoutingMapViewer() {
     for (const edge of activeFloor.edges) {
       const f = nm.get(edge.from); const t = nm.get(edge.to)
       if (!f || !t) continue
-      const highlight = pathEdgeSet.has(edge.id)
+      const highlight = pathEdgeDir.has(edge.id)
+      const reverseAnim = pathEdgeDir.get(edge.id) ?? false
+      
       if (hasPath && !highlight) {
         ctx.save()
         ctx.globalAlpha = 0.2
         drawEdge(ctx, f, t, edge, false, false, false, anim, 0, 0)
         ctx.restore()
       } else {
-        drawEdge(ctx, f, t, edge, false, false, highlight, anim, 0, 0)
+        drawEdge(ctx, f, t, edge, false, false, highlight, anim, 0, 0, reverseAnim)
       }
     }
 
@@ -133,7 +133,7 @@ export default function RoutingMapViewer() {
     }
 
     ctx.restore()
-  }, [activeFloor, emergencyByNodeId, path, pathEdgeSet, pathNodeSet])
+  }, [activeFloor, emergencyByNodeId, path, pathEdgeDir, pathNodeSet])
 
   useEffect(() => {
     const loop = () => {
@@ -173,13 +173,13 @@ export default function RoutingMapViewer() {
 
   const btnStyle: React.CSSProperties = {
     width: 30, height: 30, borderRadius: 6, border: '1px solid var(--routing-border)',
-    background: 'rgba(13,21,38,0.85)', color: 'var(--routing-text-secondary)',
+    background: 'rgba(255,255,255,0.85)', color: 'var(--routing-text-secondary)',
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 16, fontWeight: 700, transition: 'all 0.15s', backdropFilter: 'blur(8px)',
   }
 
   return (
-    <div ref={containerRef} style={{ flex: 1, position: 'relative', cursor: 'grab' }}>
+    <div ref={containerRef} style={{ flex: 1, position: 'relative', cursor: 'grab', overflow: 'hidden' }}>
       <canvas
         ref={canvasRef}
         style={{ display: 'block', width: '100%', height: '100%' }}
@@ -187,34 +187,50 @@ export default function RoutingMapViewer() {
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
+        onWheel={e => {
+          e.preventDefault()
+          const dz = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+          const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, parseFloat((zoomRef.current + dz).toFixed(2))))
+          zoomRef.current = next
+          setZoomLevel(next)
+        }}
       />
 
       {/* Zoom controls */}
       <div style={{
-        position: 'absolute', top: 10, right: 12,
-        display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',
+        position: 'absolute', bottom: 32, right: 24,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        background: 'rgba(255,255,255,0.85)', padding: '12px 8px', borderRadius: 12,
+        border: '1px solid var(--routing-border)', backdropFilter: 'blur(8px)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
       }}>
         <button style={btnStyle} onClick={handleZoomIn} title="Zoom in (+5%)">＋</button>
+        <div style={{ height: 120, width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <input 
+            type="range" min={ZOOM_MIN} max={ZOOM_MAX} step={ZOOM_STEP} value={zoomLevel}
+            onChange={e => { zoomRef.current = parseFloat(e.target.value); setZoomLevel(zoomRef.current) }}
+            style={{ width: '120px', transform: 'rotate(-90deg)', transformOrigin: 'center', cursor: 'pointer' }}
+          />
+        </div>
+        <button style={btnStyle} onClick={handleZoomOut} title="Zoom out (-5%)">－</button>
         <div style={{
-          fontSize: 10, color: 'var(--routing-text-muted)', fontFamily: 'monospace',
-          background: 'rgba(13,21,38,0.85)', padding: '2px 6px', borderRadius: 4,
-          border: '1px solid var(--routing-border)', textAlign: 'center', minWidth: 38,
-          cursor: 'pointer',
+          fontSize: 11, color: 'var(--routing-text-muted)', fontFamily: 'monospace',
+          padding: '4px 2px', textAlign: 'center', minWidth: 42,
+          cursor: 'pointer', fontWeight: 600, marginTop: 4,
         }} onClick={handleZoomReset} title="Click to reset zoom">
           {Math.round(zoomLevel * 100)}%
         </div>
-        <button style={btnStyle} onClick={handleZoomOut} title="Zoom out (-5%)">－</button>
       </div>
 
       {/* Path stats overlay */}
       {path && (
         <div style={{
-          position: 'absolute', bottom: 10, left: 10,
-          background: 'rgba(13,21,38,0.85)', border: '1px solid var(--routing-border)',
+          position: 'absolute', bottom: 32, left: 16,
+          background: 'rgba(255,255,255,0.85)', border: '1px solid var(--routing-border)',
           borderRadius: 8, padding: '6px 12px', fontSize: 12, fontFamily: 'monospace',
           color: 'var(--routing-text-secondary)',
         }}>
-          Total: <span style={{ color: '#818CF8' }}>{path.totalCost.toFixed(1)}</span> units ·
+          Total: <span style={{ color: '#0284c7' }}>{path.totalCost.toFixed(1)}</span> units ·
           {' '}<span style={{ color: '#34D399' }}>{path.algorithm.toUpperCase()}</span> ·
           {' '}{path.computeTimeMs.toFixed(2)}ms
         </div>

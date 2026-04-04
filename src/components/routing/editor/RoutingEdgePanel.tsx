@@ -15,10 +15,8 @@ export default function RoutingEdgePanel() {
 
   return (
     <div className="routing-animate-fade-in" style={{
-      position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
       background: 'var(--routing-bg-card)', border: '1px solid var(--routing-border)',
-      borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center',
-      backdropFilter: 'blur(12px)', zIndex: 10, minWidth: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12,
     }}>
       <div style={{ fontSize: 13, color: 'var(--routing-text-secondary)', whiteSpace: 'nowrap' }}>
         <span style={{ color: '#93C5FD' }}>{fromNode?.label ?? edge.from}</span>

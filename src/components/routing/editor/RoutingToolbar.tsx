@@ -26,11 +26,9 @@ export default function RoutingToolbar() {
 
   return (
     <div style={{
-      width: 72, background: 'var(--routing-bg-card)', borderRight: '1px solid var(--routing-border)',
-      display: 'flex', flexDirection: 'column', padding: '10px 6px', gap: 4,
-      flexShrink: 0, overflowY: 'auto',
+      width: '100%', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 4,
     }}>
-      <div style={{ fontSize: 9, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', padding: '4px 0', marginBottom: 2 }}>Tools</div>
+      <div style={{ width: '100%', fontSize: 9, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', padding: '4px 0', marginBottom: 2 }}>Tools</div>
       {TOOLS.map(t => (
         <button
           key={t.tool}
@@ -43,8 +41,8 @@ export default function RoutingToolbar() {
         </button>
       ))}
 
-      <hr className="routing-divider" style={{ margin: '6px 0' }} />
-      <div style={{ fontSize: 9, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', padding: '4px 0', marginBottom: 2 }}>Nodes</div>
+      <hr className="routing-divider" style={{ width: '100%', margin: '2px 0' }} />
+      <div style={{ width: '100%', fontSize: 9, color: 'var(--routing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', padding: '4px 0', marginBottom: 2 }}>Nodes</div>
       {NODES.map(t => (
         <button
           key={t.tool}
@@ -57,7 +55,7 @@ export default function RoutingToolbar() {
         </button>
       ))}
 
-      <hr className="routing-divider" style={{ margin: '6px 0' }} />
+      <hr className="routing-divider" style={{ width: '100%', margin: '2px 0' }} />
       <button
         className={`routing-tool-btn ${snapToGrid ? 'active' : ''}`}
         onClick={toggleSnapToGrid}

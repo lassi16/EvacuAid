@@ -12,7 +12,7 @@ const PRIORITY_COLORS = {
 }
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  'New':         '#818CF8',
+  'New':         '#0284c7',
   'In Progress': '#F59E0B',
   'Acknowledged':'#34D399',
   'Resolved':    '#4B5563',
@@ -57,11 +57,11 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Task Board</h1>
-          <p className="text-gray-400 text-sm">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">Task Board</h1>
+          <p className="text-slate-500 text-sm">
             Response assignments and action tracking.
             {mapLinkedTasks > 0 && (
-              <span style={{ marginLeft: 10, color: '#818CF8', fontWeight: 500 }}>
+              <span style={{ marginLeft: 10, color: '#0284c7', fontWeight: 500 }}>
                 · {mapLinkedTasks} from Building Map
               </span>
             )}
@@ -71,15 +71,15 @@ export default function TasksPage() {
           <Link href="/map" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px',
             borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-            background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.35)',
-            color: '#818CF8',
+            background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.35)',
+            color: '#0284c7',
           }}>
             🗺 Open Map
           </Link>
           <button style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px',
             borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none',
-            background: '#6366F1', color: '#fff',
+            background: '#0ea5e9', color: '#fff',
           }}>
             <Plus className="h-4 w-4" /> Create Task
           </button>
@@ -89,13 +89,13 @@ export default function TasksPage() {
       {/* Summary tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
         {[
-          { label: 'Total Tasks',    value: totalTasks,                                     color: '#818CF8', icon: '📋' },
+          { label: 'Total Tasks',    value: totalTasks,                                     color: '#0284c7', icon: '📋' },
           { label: 'Pending',        value: pendingTaskCount(),                              color: '#F59E0B', icon: '⏳' },
           { label: 'Resolved',       value: resolvedTasks,                                  color: '#34D399', icon: '✅' },
-          { label: 'Map-Linked',     value: mapLinkedTasks,                                 color: '#818CF8', icon: '🗺' },
+          { label: 'Map-Linked',     value: mapLinkedTasks,                                 color: '#0284c7', icon: '🗺' },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{
-            background: '#111c32', border: `1px solid ${color}30`, borderRadius: 10, padding: '12px 16px',
+            background: '#ffffff', border: `1px solid ${color}30`, borderRadius: 10, padding: '12px 16px',
           }}>
             <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{icon} {label}</div>
             <div style={{ fontSize: 26, fontWeight: 800, color }}>{value}</div>
@@ -105,29 +105,29 @@ export default function TasksPage() {
 
       {/* Filters */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <Filter className="h-3 w-3 text-gray-500" />
+        <Filter className="h-3 w-3 text-slate-500" />
         {(['all', 'New', 'In Progress', 'Acknowledged', 'Resolved'] as (TaskStatus | 'all')[]).map(s => (
           <button key={s} onClick={() => setFilterStatus(s)} style={{
             padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            background: filterStatus === s ? 'rgba(99,102,241,0.15)' : 'transparent',
-            color: filterStatus === s ? '#818CF8' : '#475569',
-            border: `1px solid ${filterStatus === s ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.1)'}`,
+            background: filterStatus === s ? 'rgba(14,165,233,0.15)' : 'transparent',
+            color: filterStatus === s ? '#0284c7' : '#475569',
+            border: `1px solid ${filterStatus === s ? 'rgba(14,165,233,0.35)' : 'rgba(14,165,233,0.1)'}`,
           }}>{s}</button>
         ))}
-        <div style={{ width: 1, height: 18, background: 'rgba(99,102,241,0.2)' }} />
+        <div style={{ width: 1, height: 18, background: 'rgba(14,165,233,0.2)' }} />
         {(['all', 'High', 'Medium', 'Low'] as ('all' | 'High' | 'Medium' | 'Low')[]).map(p => (
           <button key={p} onClick={() => setFilterPriority(p)} style={{
             padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            background: filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].bg : 'rgba(99,102,241,0.15)') : 'transparent',
-            color: filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].text : '#818CF8') : '#475569',
-            border: `1px solid ${filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].border : 'rgba(99,102,241,0.35)') : 'rgba(99,102,241,0.1)'}`,
+            background: filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].bg : 'rgba(14,165,233,0.15)') : 'transparent',
+            color: filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].text : '#0284c7') : '#475569',
+            border: `1px solid ${filterPriority === p ? (p !== 'all' ? PRIORITY_COLORS[p].border : 'rgba(14,165,233,0.35)') : 'rgba(14,165,233,0.1)'}`,
           }}>{p.toUpperCase()}</button>
         ))}
         <button onClick={() => setFilterMap(m => !m)} style={{
           padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-          background: filterMap ? 'rgba(99,102,241,0.15)' : 'transparent',
-          color: filterMap ? '#818CF8' : '#475569',
-          border: `1px solid ${filterMap ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.1)'}`,
+          background: filterMap ? 'rgba(14,165,233,0.15)' : 'transparent',
+          color: filterMap ? '#0284c7' : '#475569',
+          border: `1px solid ${filterMap ? 'rgba(14,165,233,0.35)' : 'rgba(14,165,233,0.1)'}`,
         }}>🗺 Map Only</button>
         <span style={{ fontSize: 11, color: '#475569', marginLeft: 'auto' }}>{filtered.length} tasks</span>
       </div>
@@ -141,7 +141,7 @@ export default function TasksPage() {
 
           return (
             <div key={task.id} style={{
-              background: '#111c32', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 10,
+              background: '#ffffff', border: '1px solid rgba(14,165,233,0.15)', borderRadius: 10,
               overflow: 'hidden', transition: 'border-color 0.15s',
             }}>
               {/* Main row */}
@@ -154,14 +154,14 @@ export default function TasksPage() {
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#818CF8', fontWeight: 600 }}>{task.id}</span>
-                    {incident?.mapLinked && <span style={{ fontSize: 10, color: '#818CF8' }}>🗺</span>}
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#0284c7', fontWeight: 600 }}>{task.id}</span>
+                    {incident?.mapLinked && <span style={{ fontSize: 10, color: '#0284c7' }}>🗺</span>}
                     <span style={{ fontSize: 11, color: '#475569' }}>→</span>
-                    <Link href="/incidents" onClick={e => e.stopPropagation()} style={{ fontSize: 11, color: '#818CF8', textDecoration: 'none', fontFamily: 'monospace' }}>
+                    <Link href="/incidents" onClick={e => e.stopPropagation()} style={{ fontSize: 11, color: '#0284c7', textDecoration: 'none', fontFamily: 'monospace' }}>
                       {task.incidentId}
                     </Link>
                   </div>
-                  <div style={{ fontSize: 13, color: '#F1F5F9', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {task.description ?? `Respond to ${incident?.type ?? task.incidentId}`}
                   </div>
                 </div>
@@ -194,7 +194,7 @@ export default function TasksPage() {
 
               {/* Expanded detail */}
               {isExpanded && (
-                <div style={{ padding: '0 16px 14px 16px', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: 12 }}>
+                <div style={{ padding: '0 16px 14px 16px', borderTop: '1px solid rgba(14,165,233,0.1)', paddingTop: 12 }}>
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
                     {incident && (
                       <>
@@ -227,7 +227,7 @@ export default function TasksPage() {
                         padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                         background: task.status === s ? `${STATUS_COLORS[s]}20` : 'transparent',
                         color: task.status === s ? STATUS_COLORS[s] : '#475569',
-                        border: `1px solid ${task.status === s ? STATUS_COLORS[s] + '60' : 'rgba(99,102,241,0.15)'}`,
+                        border: `1px solid ${task.status === s ? STATUS_COLORS[s] + '60' : 'rgba(14,165,233,0.15)'}`,
                         transition: 'all 0.15s',
                       }}>
                         {s}
@@ -236,8 +236,8 @@ export default function TasksPage() {
                     {incident?.mapLinked && (
                       <Link href="/map" style={{
                         marginLeft: 'auto', padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                        textDecoration: 'none', color: '#818CF8',
-                        background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
+                        textDecoration: 'none', color: '#0284c7',
+                        background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)',
                       }}>
                         🗺 View on Map
                       </Link>

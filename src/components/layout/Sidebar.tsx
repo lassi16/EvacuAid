@@ -30,11 +30,11 @@ export function Sidebar() {
   if (pathname === "/login") return null
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r border-gray-800 bg-brand-darker">
-      <div className="flex h-16 items-center px-6 border-b border-gray-800">
+    <div className="flex h-screen w-64 flex-col border-r border-slate-200 bg-slate-50">
+      <div className="flex h-16 items-center px-6 border-b border-slate-200">
         <Link href="/" className="flex items-center gap-2 text-brand-red">
           <ShieldAlert className="h-6 w-6" />
-          <span className="text-xl font-bold text-white tracking-widest">SafeSphere</span>
+          <span className="text-xl font-bold text-slate-900 tracking-widest">EvacuAid</span>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -47,14 +47,14 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-brand-panel text-white"
-                  : "text-brand-text-muted hover:bg-gray-800 hover:text-white"
+                  ? "bg-white shadow-sm text-sky-600"
+                  : "text-slate-500 hover:bg-white hover:text-sky-600"
               )}
             >
               <item.icon
                 className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-brand-red" : "text-gray-500 group-hover:text-gray-300"
+                  isActive ? "text-sky-600" : "text-slate-400 group-hover:text-sky-500"
                 )}
                 aria-hidden="true"
               />
@@ -64,14 +64,14 @@ export function Sidebar() {
         })}
       </nav>
       {/* Current User Role Mock UI */}
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-slate-200 p-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-brand-panel flex items-center justify-center font-bold text-sm text-brand-red">
+          <div className="h-10 w-10 rounded-full bg-sky-100 flex items-center justify-center font-bold text-sm text-sky-600">
             A
           </div>
           <div>
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-brand-text-muted">Global Access</p>
+            <p className="text-sm font-medium text-slate-900">Admin User</p>
+            <p className="text-xs text-slate-500">Global Access</p>
           </div>
         </div>
       </div>
