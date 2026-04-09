@@ -102,6 +102,7 @@ function SectionHeader({ title, sub, href, linkLabel }: { title: string; sub: st
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [countdown, setCountdown] = useState(120)
+  const [isMounted, setIsMounted] = useState(false)
 
   const {
     incidents, tasks, notifications,
@@ -109,6 +110,7 @@ export default function DashboardPage() {
   } = useIncidentStore()
 
   useEffect(() => {
+    setIsMounted(true)
     const t = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
@@ -180,7 +182,7 @@ export default function DashboardPage() {
             fontFamily: 'monospace', fontSize: 13, color: '#475569',
           }}>
             <Clock className="h-3.5 w-3.5 text-red-500" />
-            {currentTime.toLocaleTimeString()}
+            {isMounted ? currentTime.toLocaleTimeString() : "--:--:--"}
           </div>
         </div>
       </div>
