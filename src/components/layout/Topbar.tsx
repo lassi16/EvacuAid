@@ -5,28 +5,37 @@ import { usePathname } from "next/navigation"
 import { Bell, Search, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useIncidentStore } from "@/stores/incidentStore"
-import { useDeviceStore } from "@/stores/deviceStore"
-import { useRoutingEditorStore } from "@/stores/routingEditorStore"
-import { GlobalSearchMenu } from "./GlobalSearchMenu"
 
 export function Topbar() {
   const pathname = usePathname()
-  const initIncidents = useIncidentStore(s => s.initialize)
-  const initDevices = useDeviceStore(s => s.initialize)
-  const initMap = useRoutingEditorStore(s => s.initialize)
+  const initialize = useIncidentStore(s => s.initialize)
 
   useEffect(() => {
-    initIncidents().catch(err => console.error("Failed to initialize incidents", err))
-    initDevices().catch(err => console.error("Failed to initialize devices", err))
-    initMap().catch(err => console.error("Failed to initialize map", err))
-  }, [initIncidents, initDevices, initMap])
+    initialize().catch(err => console.error("Failed to initialize shared incident data", err))
+  }, [initialize])
 
   if (pathname === "/login") return null
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
       <div className="flex flex-1 items-center">
-        <GlobalSearchMenu />
+        <div className="relative w-full max-w-md">
+          <label htmlFor="search" className="sr-only">
+            Search incidents or locations
+          </label>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            </div>
+            <input
+              id="search"
+              name="search"
+              className="block w-full rounded-md border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-900"
+              placeholder="Search incidents or commands..."
+              type="search"
+            />
+          </div>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         {/* Mock Language Switcher */}

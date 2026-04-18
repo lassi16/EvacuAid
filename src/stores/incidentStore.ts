@@ -221,7 +221,7 @@ export const useIncidentStore = create<IncidentStoreState>((set, get) => ({
 
   initialize: async () => {
     if (get().hydrated) return
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const res = await fetch('/api/state', { cache: 'no-store' })
         if (!res.ok) throw new Error(`Failed to fetch shared state: ${res.status}`)
@@ -241,9 +241,8 @@ export const useIncidentStore = create<IncidentStoreState>((set, get) => ({
         set({ hydrated: true })
         return
       } catch (err) {
-        if (attempt < 5) {
-          console.warn(`Database waking up... Retrying incident fetch (Attempt ${attempt}/5)`)
-          await sleep(3500) // Sleep 3.5s to survive the Google Cloud 15s cold starts
+        if (attempt < 3) {
+          await sleep(700)
           continue
         }
         console.error('Failed to initialize incident store from DB', err)
