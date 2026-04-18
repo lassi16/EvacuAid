@@ -68,6 +68,39 @@ function nowStr() {
   return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
+function parseCounter(id: string, prefix: string) {
+  if (!id.startsWith(`${prefix}-`)) return 0
+  const raw = id.slice(prefix.length + 1)
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+function syncLocalCounters(incidents: Incident[], tasks: Task[], notifications: Notification[]) {
+  incCounter = Math.max(incCounter, ...incidents.map(i => parseCounter(i.id, 'INC')))
+  tskCounter = Math.max(tskCounter, ...tasks.map(t => parseCounter(t.id, 'TSK')))
+  ntfCounter = Math.max(ntfCounter, ...notifications.map(n => parseCounter(n.id, 'NTF')))
+}
+
+function postJSON(url: string, body: unknown) {
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(err => console.error(`POST ${url} failed`, err))
+}
+
+function patchJSON(url: string, body?: unknown) {
+  fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch(err => console.error(`PATCH ${url} failed`, err))
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 function emergencyToIncident(nodeId: string, nodeName: string, floorName: string, emergencyType: EmergencyType): Incident {
   const typeMap: Record<EmergencyType, { type: string; severity: Severity; team: string; desc: string }> = {
     fire:     { type: 'Fire',     severity: 'critical', team: 'Fire Dept',    desc: 'Fire / smoke detected by building map sensor.' },
@@ -155,15 +188,17 @@ interface IncidentStoreState {
   incidents: Incident[]
   tasks: Task[]
   notifications: Notification[]
+  hydrated: boolean
   // Tracking: which map nodeIds we already created incidents for
   mapIncidentNodeIds: Set<string>
 
   // Actions
-  addIncident: (inc: Omit<Incident, 'id'>) => string
+  initialize: () => Promise<void>
+  addIncident: (inc: Omit<Incident, 'id'> & { id?: string }) => string
   updateIncidentStatus: (id: string, status: IncidentStatus) => void
-  addTask: (task: Omit<Task, 'id'>) => void
+  addTask: (task: Omit<Task, 'id'> & { id?: string }) => void
   updateTaskStatus: (id: string, status: TaskStatus) => void
-  addNotification: (notif: Omit<Notification, 'id'>) => void
+  addNotification: (notif: Omit<Notification, 'id'> & { id?: string }) => void
   acknowledgeNotification: (id: string) => void
   markNotificationRead: (id: string) => void
 
@@ -181,36 +216,85 @@ export const useIncidentStore = create<IncidentStoreState>((set, get) => ({
   incidents: SEED_INCIDENTS,
   tasks: SEED_TASKS,
   notifications: SEED_NOTIFICATIONS,
+  hydrated: false,
   mapIncidentNodeIds: new Set<string>(),
 
+  initialize: async () => {
+    if (get().hydrated) return
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await fetch('/api/state', { cache: 'no-store' })
+        if (!res.ok) throw new Error(`Failed to fetch shared state: ${res.status}`)
+        const data = await res.json()
+
+        const incidents = (data.incidents ?? []) as Incident[]
+        const tasks = (data.tasks ?? []) as Task[]
+        const notifications = (data.notifications ?? []) as Notification[]
+
+        if (incidents.length > 0 || tasks.length > 0 || notifications.length > 0) {
+          syncLocalCounters(incidents, tasks, notifications)
+          set({ incidents, tasks, notifications, hydrated: true })
+          return
+        }
+
+        // Empty DB is still a valid hydrated state.
+        set({ hydrated: true })
+        return
+      } catch (err) {
+        if (attempt < 3) {
+          await sleep(700)
+          continue
+        }
+        console.error('Failed to initialize incident store from DB', err)
+      }
+    }
+
+    // Fallback to local seed data in case DB is not ready yet.
+    syncLocalCounters(SEED_INCIDENTS, SEED_TASKS, SEED_NOTIFICATIONS)
+    set({ hydrated: true })
+  },
+
   addIncident: (data) => {
-    const id = `INC-${++incCounter}`
+    const id = data.id ?? `INC-${++incCounter}`
     const inc: Incident = { ...data, id }
     set(s => ({ incidents: [inc, ...s.incidents] }))
+    postJSON('/api/incidents', inc)
     return id
   },
 
-  updateIncidentStatus: (id, status) =>
-    set(s => ({ incidents: s.incidents.map(i => i.id === id ? { ...i, status } : i) })),
+  updateIncidentStatus: (id, status) => {
+    set(s => ({ incidents: s.incidents.map(i => i.id === id ? { ...i, status } : i) }))
+    patchJSON(`/api/incidents/${id}/status`, { status })
+  },
 
   addTask: (data) => {
-    const id = `TSK-${++tskCounter}`
-    set(s => ({ tasks: [{ ...data, id }, ...s.tasks] }))
+    const id = data.id ?? `TSK-${++tskCounter}`
+    const task: Task = { ...data, id }
+    set(s => ({ tasks: [task, ...s.tasks] }))
+    postJSON('/api/tasks', task)
   },
 
-  updateTaskStatus: (id, status) =>
-    set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, status } : t) })),
+  updateTaskStatus: (id, status) => {
+    set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, status } : t) }))
+    patchJSON(`/api/tasks/${id}/status`, { status })
+  },
 
   addNotification: (data) => {
-    const id = `NTF-${++ntfCounter}`
-    set(s => ({ notifications: [{ ...data, id }, ...s.notifications] }))
+    const id = data.id ?? `NTF-${++ntfCounter}`
+    const notification: Notification = { ...data, id }
+    set(s => ({ notifications: [notification, ...s.notifications] }))
+    postJSON('/api/notifications', notification)
   },
 
-  acknowledgeNotification: (id) =>
-    set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, ack: true, opened: true } : n) })),
+  acknowledgeNotification: (id) => {
+    set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, ack: true, opened: true } : n) }))
+    patchJSON(`/api/notifications/${id}/ack`)
+  },
 
-  markNotificationRead: (id) =>
-    set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, opened: true } : n) })),
+  markNotificationRead: (id) => {
+    set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, opened: true } : n) }))
+    patchJSON(`/api/notifications/${id}/read`)
+  },
 
   syncFromMap: (emergencyMap, nodeNames, floorNames) => {
     const state = get()
@@ -234,6 +318,9 @@ export const useIncidentStore = create<IncidentStoreState>((set, get) => ({
         tasks: [task, ...s.tasks],
         notifications: [notif, ...s.notifications],
       }))
+      postJSON('/api/incidents', incident)
+      postJSON('/api/tasks', task)
+      postJSON('/api/notifications', notif)
     }
 
     // Resolve incidents for removed emergency nodes
@@ -252,6 +339,13 @@ export const useIncidentStore = create<IncidentStoreState>((set, get) => ({
             return t
           }),
         }))
+        const linked = state.incidents.find(i => i.nodeId === nodeId)
+        if (linked) {
+          patchJSON(`/api/incidents/${linked.id}/status`, { status: 'Resolved' })
+          state.tasks
+            .filter(t => t.incidentId === linked.id && t.status !== 'Resolved')
+            .forEach(t => patchJSON(`/api/tasks/${t.id}/status`, { status: 'Resolved' }))
+        }
       }
     }
 

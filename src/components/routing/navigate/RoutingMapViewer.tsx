@@ -13,9 +13,10 @@ export default function RoutingMapViewer() {
   const containerRef = useRef<HTMLDivElement>(null)
   const animRef = useRef<number>(0)
   const animOffset = useRef<number>(0)
-  const panRef = useRef({ ox: 60, oy: 60 })
-  const zoomRef = useRef(1.2)
-  const [zoomLevel, setZoomLevel] = useState(1.2)
+  // Start slightly panned right and at ~75% zoom
+  const panRef = useRef({ ox: 120, oy: 60 })
+  const zoomRef = useRef(0.75)
+  const [zoomLevel, setZoomLevel] = useState(0.75)
 
   const { building } = useRoutingEditorStore()
   const { path, activeViewFloor, emergencyByNodeId } = useRoutingNavigationStore()
@@ -52,8 +53,8 @@ export default function RoutingMapViewer() {
   }, [])
 
   const handleZoomReset = useCallback(() => {
-    zoomRef.current = 1.2
-    setZoomLevel(1.2)
+    zoomRef.current = 0.75
+    setZoomLevel(0.75)
   }, [])
 
   const draw = useCallback(() => {

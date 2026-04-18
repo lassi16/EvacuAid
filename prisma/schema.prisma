@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Incident {
+  id            String         @id
+  type          String
+  severity      String
+  status        String
+  time          String
+  location      String
+  team          String
+  nodeId        String?
+  floorId       Int?
+  mapLinked     Boolean        @default(false)
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tasks         Task[]
+  notifications Notification[]
+
+  @@index([status])
+  @@index([severity])
+}
+
+model Task {
+  id          String   @id
+  incidentId  String
+  assignee    String
+  priority    String
+  status      String
+  createdAt   String
+  description String?
+  insertedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@index([status])
+}
+
+model Notification {
+  id          String   @id
+  incidentId  String
+  user        String
+  role        String
+  time        String
+  opened      Boolean  @default(false)
+  ack         Boolean  @default(false)
+  escalated   Boolean  @default(false)
+  message     String
+  insertedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@index([ack])
+  @@index([opened])
+}

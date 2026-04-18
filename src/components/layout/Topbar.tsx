@@ -1,11 +1,18 @@
 "use client"
 
+import { useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { Bell, Search, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useIncidentStore } from "@/stores/incidentStore"
 
 export function Topbar() {
   const pathname = usePathname()
+  const initialize = useIncidentStore(s => s.initialize)
+
+  useEffect(() => {
+    initialize().catch(err => console.error("Failed to initialize shared incident data", err))
+  }, [initialize])
 
   if (pathname === "/login") return null
 
