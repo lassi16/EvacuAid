@@ -10,16 +10,16 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/adapter-mariadb": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.19.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
-    "mariadb": "^3.5.2",
     "next": "16.2.1",
-    "prisma": "^7.7.0",
+    "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "^3.5.0",

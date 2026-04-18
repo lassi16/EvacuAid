@@ -2,19 +2,30 @@ import { Building } from '@/lib/routing/graph/types'
 
 const STORAGE_KEY = 'evacuaid-indoor-map-building-v2'
 
-export function saveBuilding(building: Building): void {
+export async function saveBuilding(building: Building): Promise<void> {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(building))
+    await fetch('/api/map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(building)
+    })
   } catch (e) {
     console.error('Failed to save building:', e)
   }
 }
 
-export function loadBuilding(): Building | null {
+export async function loadBuilding(retryCount = 0): Promise<Building | null> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as Building
+    const res = await fetch('/api/map')
+    if (!res.ok) {
+      if (res.status === 500 && retryCount < 3) {
+        console.warn('Database waking up, retrying map fetch...')
+        await new Promise(r => setTimeout(r, 3000))
+        return loadBuilding(retryCount + 1)
+      }
+      return null
+    }
+    return (await res.json()) as Building
   } catch (e) {
     console.error('Failed to load building:', e)
     return null

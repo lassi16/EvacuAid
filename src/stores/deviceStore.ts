@@ -19,72 +19,96 @@ export interface IoTDevice {
   feedUrl?: string // For CCTV mock images
 }
 
-// ──────────────────────── Mock Data ────────────────────────
-
-function nowStr() {
-  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-}
-
-const SEED_DEVICES: IoTDevice[] = [
-  // CCTVs
-  { id: 'DEV-C10', name: 'Lobby Cam 01', type: 'cctv', location: 'Main Lobby', status: 'online', lastPing: 'Just now', feedUrl: '/cctv/lobby.png' },
-  { id: 'DEV-C11', name: 'Corridor Cam North', type: 'cctv', location: 'Floor 2 - North', status: 'online', lastPing: 'Just now', feedUrl: '/cctv/corridor.png' },
-  { id: 'DEV-C12', name: 'Server Room Cam', type: 'cctv', location: 'Floor 1 - Server Room', status: 'online', lastPing: '1m ago', feedUrl: '/cctv/server.png' },
-  { id: 'DEV-C13', name: 'Basement Cam 02', type: 'cctv', location: 'Basement Parking', status: 'offline', lastPing: '14h ago' },
-
-  // Smoke & Fire Sensors
-  { id: 'DEV-S01', name: 'Smoke Detector A1', type: 'smoke', location: 'Sector 3, Floor 2', status: 'alert', lastPing: 'Just now', battery: 85 },
-  { id: 'DEV-S02', name: 'Smoke Detector A2', type: 'smoke', location: 'Sector 3, Floor 2', status: 'alert', lastPing: 'Just now', battery: 82 },
-  { id: 'DEV-S03', name: 'Smoke Detector B1', type: 'smoke', location: 'Lobby Area', status: 'online', lastPing: '5m ago', battery: 96 },
-  { id: 'DEV-F01', name: 'Fire Sensor N-2', type: 'fire', location: 'Corridor North, Fl 3', status: 'online', lastPing: '2m ago', battery: 100 },
-  { id: 'DEV-F02', name: 'Fire Sensor S-1', type: 'fire', location: 'Cafeteria Kitchen', status: 'maintenance', lastPing: '2d ago', battery: 12 },
-
-  // Access Control
-  { id: 'DEV-D01', name: 'Smart Door Entry', type: 'door', location: 'Main Entry', status: 'online', lastPing: 'Just now' },
-  { id: 'DEV-D02', name: 'Server Secure Lock', type: 'access', location: 'Floor 1 - Server Room', status: 'online', lastPing: 'Just now' },
-  { id: 'DEV-D03', name: 'Roof Access Lock', type: 'access', location: 'Roof Stairwell', status: 'offline', lastPing: '3h ago', battery: 0 },
-]
+// Hardcoded mock data has been moved to prisma/seed.ts and Cloud SQL
 
 // ──────────────────────── Store ────────────────────────
 
 interface DeviceStoreState {
   devices: IoTDevice[]
-  
-  updateDeviceStatus: (id: string, status: DeviceStatus) => void
-  rebootDevice: (id: string) => void
-  simulateAlert: (id: string) => void
+  hydrated: boolean
+
+  initialize: (retryCount?: number) => Promise<void>
+  updateDeviceStatus: (id: string, status: DeviceStatus) => Promise<void>
+  rebootDevice: (id: string) => Promise<void>
+  simulateAlert: (id: string) => Promise<void>
+}
+
+// Helper
+function nowStr() {
+  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
 export const useDeviceStore = create<DeviceStoreState>((set, get) => ({
-  devices: SEED_DEVICES,
+  devices: [],
+  hydrated: false,
 
-  updateDeviceStatus: (id, status) => {
+  initialize: async (retryCount = 0) => {
+    try {
+      const res = await fetch('/api/devices')
+      if (res.ok) {
+        const devices = await res.json()
+        set({ devices, hydrated: true })
+      } else if (res.status === 500 && retryCount < 3) {
+        // Handle Google Cloud SQL cold-start timeouts
+        console.warn('Database waking up, retrying device fetch...')
+        setTimeout(() => get().initialize(retryCount + 1), 3000)
+      }
+    } catch (e) {
+      console.error('Failed to hydrate device store', e)
+    }
+  },
+
+  updateDeviceStatus: async (id, status) => {
+    // Optimistic UI update
     set(state => ({
       devices: state.devices.map(d => d.id === id ? { ...d, status, lastPing: 'Just now' } : d)
     }))
+    
+    await fetch(`/api/devices/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    })
   },
 
-  rebootDevice: (id) => {
+  rebootDevice: async (id) => {
+    // 1. Set offline locally and in DB
     set(state => ({
       devices: state.devices.map(d => d.id === id ? { ...d, status: 'offline' } : d)
     }))
-    // Simulate booting up after 3 seconds
-    setTimeout(() => {
+    await fetch(`/api/devices/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'offline' })
+    })
+
+    // 2. Simulate booting up after 3 seconds
+    setTimeout(async () => {
       set(state => ({
         devices: state.devices.map(d => d.id === id ? { ...d, status: 'online', lastPing: 'Just now', battery: d.battery !== undefined ? 100 : undefined } : d)
       }))
+      await fetch(`/api/devices/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'online', battery: 100 })
+      })
     }, 3000)
   },
 
-  simulateAlert: (id) => {
+  simulateAlert: async (id) => {
     const devices = get().devices
     const device = devices.find(d => d.id === id)
     if (!device) return
 
-    // 1. Set local device to Alert
+    // 1. Set local device to Alert and update backend
     set(state => ({
       devices: state.devices.map(d => d.id === id ? { ...d, status: 'alert', lastPing: 'Just now' } : d)
     }))
+    await fetch(`/api/devices/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'alert' })
+    })
 
     // 2. Trigger global incident
     let type = 'System Alert'

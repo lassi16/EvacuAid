@@ -48,6 +48,15 @@ const ROLE_COLORS: Record<string, string> = {
   'Hazmat Unit':    '#A855F7', 'IT Dept': '#3B82F6', 'Operations': '#475569',
 }
 
+function formatClockTime(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  }).format(date)
+}
+
 // ── Mini Card ─────────────────────────────────────────────────────────────────
 function StatCard({
   label, value, sub, icon, accentColor, pulse, href
@@ -100,9 +109,8 @@ function SectionHeader({ title, sub, href, linkLabel }: { title: string; sub: st
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState('--:--:--')
   const [countdown, setCountdown] = useState(120)
-  const [isMounted, setIsMounted] = useState(false)
 
   const {
     incidents, tasks, notifications,
@@ -110,8 +118,9 @@ export default function DashboardPage() {
   } = useIncidentStore()
 
   useEffect(() => {
-    setIsMounted(true)
-    const t = setInterval(() => setCurrentTime(new Date()), 1000)
+    const updateTime = () => setCurrentTime(formatClockTime(new Date()))
+    updateTime()
+    const t = setInterval(updateTime, 1000)
     return () => clearInterval(t)
   }, [])
 
@@ -182,7 +191,7 @@ export default function DashboardPage() {
             fontFamily: 'monospace', fontSize: 13, color: '#475569',
           }}>
             <Clock className="h-3.5 w-3.5 text-red-500" />
-            {isMounted ? currentTime.toLocaleTimeString() : "--:--:--"}
+            {currentTime}
           </div>
         </div>
       </div>
@@ -270,7 +279,7 @@ export default function DashboardPage() {
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: criticalCount() > 0 ? '#EF4444' : '#34D399', boxShadow: criticalCount() > 0 ? '0 0 8px rgba(239,68,68,0.7)' : 'none', display: 'inline-block', animation: criticalCount() > 0 ? 'pulse 2s ease-in-out infinite' : 'none' }} />
                 <span style={{ fontSize: 12, fontWeight: 700, color: criticalCount() > 0 ? '#F87171' : '#34D399', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Priority Alerts</span>
               </div>
-              <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#475569' }}>{currentTime.toLocaleTimeString()}</span>
+              <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#475569' }}>{currentTime}</span>
             </div>
             <div style={{ padding: '0' }}>
               {criticalIncidents.slice(0, 2).map((inc, i) => (

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageSquareText, X, Send, Bot, User, Sparkles } from "lucide-react"
+import { MessageSquareText, X, Send, Bot, User, Sparkles, Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type MessageRole = "assistant" | "user"
@@ -14,6 +14,7 @@ interface ChatMessage {
 
 export function FloatingChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [inputVal, setInputVal] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -31,39 +32,42 @@ export function FloatingChatWidget() {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Fake AI Responder Matrix (for Demo)
-  const generateMockResponse = (query: string) => {
-    const q = query.toLowerCase()
-    
-    // Quick artificial delays to simulate LLM thinking
+  // Dynamic Gemini AI Fetch
+  const generateAIResponse = async (userText: string, currentMessages: ChatMessage[]) => {
     setIsTyping(true)
-    setTimeout(() => {
-      let response = "I don't have enough data on that. I recommend proceeding to the nearest safe stairwell and ignoring elevators."
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: currentMessages })
+      })
       
-      if (q.includes("stairwell") || q.includes("exit")) {
-        response = "The nearest safe stairwell is the West Stairwell. Do NOT take the East Stairwell; sensors indicate high thermal signatures."
-      } else if (q.includes("trapped") || q.includes("help") || q.includes("stuck")) {
-        response = "I have automatically pinged your location to the Medical and Fire dispatch units. Please stay low to the ground and barricade the door if smoke is entering."
-      } else if (q.includes("map") || q.includes("where")) {
-        response = "You can view dynamic real-time evacuation routes on the Building Map tab located in the left sidebar."
-      } else if (q.includes("extinguisher")) {
-        response = "There is a Class A fire extinguisher located exactly 15 feet down the Central Corridor on Floor 3."
+      if (!response.ok) {
+        throw new Error('Failed to connect to Command Node')
       }
-      
-      setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: "assistant", content: response }])
+
+      const data = await response.json()
+      setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: "assistant", content: data.response }])
+    } catch (error) {
+      console.error(error)
+      setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: "assistant", content: "Error: Connection to Central Command LLM failed. Operating offline." }])
+    } finally {
       setIsTyping(false)
-    }, 1200)
+    }
   }
 
   const handleSend = (text: string) => {
     if (!text.trim()) return
     
     // Add user message
-    setMessages(prev => [...prev, { id: `usr-${Date.now()}`, role: "user", content: text }])
+    const newUserMsg: ChatMessage = { id: `usr-${Date.now()}`, role: "user", content: text }
+    const updatedMessages = [...messages, newUserMsg]
+    
+    setMessages(updatedMessages)
     setInputVal("")
     
-    // Trigger mock AI response
-    generateMockResponse(text)
+    // Trigger real AI response over HTTP
+    generateAIResponse(text, updatedMessages)
   }
 
   return (
@@ -72,7 +76,12 @@ export function FloatingChatWidget() {
       {/* Floating Panel Form */}
       {isOpen && (
         <div 
-          className="mb-4 w-[360px] h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 transition-all duration-300 ease-out origin-bottom-right"
+          className={cn(
+            "bg-white flex flex-col overflow-hidden border border-slate-200 transition-all duration-300 ease-out origin-bottom-right shadow-2xl",
+            isExpanded 
+              ? "fixed inset-0 z-50 rounded-none w-full h-full" 
+              : "mb-4 w-[360px] h-[500px] rounded-2xl"
+          )}
           style={{ animation: 'bounce-fade-up 0.2s ease-out forwards' }}
         >
           {/* Header */}
@@ -86,12 +95,22 @@ export function FloatingChatWidget() {
                 <p className="text-[10px] text-sky-100 uppercase tracking-widest font-medium">Assistant Node Online</p>
               </div>
             </div>
-            <button 
-              onClick={() => setIsOpen(false)}
-              className="text-sky-100 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-1.5 rounded-md"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-sky-100 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-1.5 rounded-md"
+                title={isExpanded ? "Minimize" : "Expand to Full Screen"}
+              >
+                {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </button>
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="text-sky-100 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-1.5 rounded-md"
+                title="Close Chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Scroller */}
@@ -177,16 +196,18 @@ export function FloatingChatWidget() {
         </div>
       )}
 
-      {/* Launcher Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300",
-          isOpen ? "bg-slate-800 text-white hover:bg-slate-900" : "bg-sky-600 text-white hover:bg-sky-700 hover:scale-105"
-        )}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageSquareText className="h-6 w-6" />}
-      </button>
+      {/* Launcher Button (Hidden when expanded) */}
+      {!isExpanded && (
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300",
+            isOpen ? "bg-slate-800 text-white hover:bg-slate-900" : "bg-sky-600 text-white hover:bg-sky-700 hover:scale-105"
+          )}
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <MessageSquareText className="h-6 w-6" />}
+        </button>
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes bounce-fade-up {

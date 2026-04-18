@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import { Building, Floor, MapEdge, MapNode, NodeType, Tool } from '@/lib/routing/graph/types'
 import { DEFAULT_BUILDING } from '@/lib/routing/graph/hotelExample'
-import { saveBuilding } from '@/lib/routing/storage/persist'
+import { saveBuilding, loadBuilding } from '@/lib/routing/storage/persist'
 
 function genId() { return Math.random().toString(36).slice(2, 9) }
 
@@ -27,7 +27,9 @@ interface EditorState {
   selectedEdgeId: string | null
   snapToGrid: boolean
   edgeStartNodeId: string | null
+  hydrated: boolean
 
+  initialize: () => Promise<void>
   setBuilding: (b: Building) => void
   resetToDefault: () => void
 
@@ -63,6 +65,18 @@ export const useRoutingEditorStore = create<EditorState>((set, get) => ({
   selectedEdgeId: null,
   snapToGrid: true,
   edgeStartNodeId: null,
+  hydrated: false,
+
+  initialize: async () => {
+    const building = await loadBuilding()
+    if (building) {
+      set({ building, activeFloorId: building.floors[0]?.id ?? 1, hydrated: true })
+    } else {
+      set({ building: DEFAULT_BUILDING, activeFloorId: 1, hydrated: true })
+      // Initial persist for first boot
+      saveBuilding(DEFAULT_BUILDING)
+    }
+  },
 
   setBuilding: (b) => { set({ building: b, activeFloorId: b.floors[0]?.id ?? 1 }); saveBuilding(b) },
   resetToDefault: () => set({ building: DEFAULT_BUILDING, activeFloorId: 1, selectedNodeId: null, selectedEdgeId: null }),

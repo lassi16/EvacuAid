@@ -9,6 +9,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model Incident {
@@ -65,4 +66,27 @@ model Notification {
   @@index([incidentId])
   @@index([ack])
   @@index([opened])
+}
+
+model Device {
+  id          String   @id
+  name        String
+  type        String
+  location    String
+  status      String
+  lastPing    String
+  battery     Int?
+  feedUrl     String?
+  insertedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+}
+
+model BuildingMap {
+  id          String   @id
+  name        String
+  jsonData    Json
+  updatedAt   DateTime @updatedAt
 }

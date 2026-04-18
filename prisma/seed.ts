@@ -1,13 +1,18 @@
 import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
-import { PrismaMariaDb } from "@prisma/adapter-mariadb"
+import { DEFAULT_BUILDING } from "../src/lib/routing/graph/hotelExample"
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set")
 }
 
-const adapter = new PrismaMariaDb(process.env.DATABASE_URL)
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+})
 
 async function main() {
   const incidents = [
@@ -55,6 +60,39 @@ async function main() {
       create: notification,
     })
   }
+
+  // --- Devices ---
+  const SEED_DEVICES = [
+    { id: 'DEV-C10', name: 'Lobby Cam 01', type: 'cctv', location: 'Main Lobby', status: 'online', lastPing: 'Just now', feedUrl: '/cctv/lobby_1775397097334.png' },
+    { id: 'DEV-C11', name: 'Corridor Cam North', type: 'cctv', location: 'Floor 2 - North', status: 'online', lastPing: 'Just now', feedUrl: '/cctv/corridor_1775397112677.png' },
+    { id: 'DEV-C12', name: 'Server Room Cam', type: 'cctv', location: 'Floor 1 - Server Room', status: 'online', lastPing: '1m ago', feedUrl: '/cctv/server_room_1775397130770.png' },
+    { id: 'DEV-C13', name: 'Basement Cam 02', type: 'cctv', location: 'Basement Parking', status: 'offline', lastPing: '14h ago' },
+    { id: 'DEV-S01', name: 'Smoke Detector A1', type: 'smoke', location: 'Sector 3, Floor 2', status: 'alert', lastPing: 'Just now', battery: 85 },
+    { id: 'DEV-S02', name: 'Smoke Detector A2', type: 'smoke', location: 'Sector 3, Floor 2', status: 'alert', lastPing: 'Just now', battery: 82 },
+    { id: 'DEV-S03', name: 'Smoke Detector B1', type: 'smoke', location: 'Lobby Area', status: 'online', lastPing: '5m ago', battery: 96 },
+    { id: 'DEV-F01', name: 'Fire Sensor N-2', type: 'fire', location: 'Corridor North, Fl 3', status: 'online', lastPing: '2m ago', battery: 100 },
+    { id: 'DEV-F02', name: 'Fire Sensor S-1', type: 'fire', location: 'Cafeteria Kitchen', status: 'maintenance', lastPing: '2d ago', battery: 12 },
+    { id: 'DEV-D01', name: 'Smart Door Entry', type: 'door', location: 'Main Entry', status: 'online', lastPing: 'Just now' },
+    { id: 'DEV-D02', name: 'Server Secure Lock', type: 'access', location: 'Floor 1 - Server Room', status: 'online', lastPing: 'Just now' },
+    { id: 'DEV-D03', name: 'Roof Access Lock', type: 'access', location: 'Roof Stairwell', status: 'offline', lastPing: '3h ago', battery: 0 },
+  ]
+  
+  for (const device of SEED_DEVICES) {
+    await prisma.device.upsert({
+      where: { id: device.id },
+      update: device,
+      create: device,
+    })
+  }
+
+  // --- Building Map JSON ---
+  const mapId = "global_evacuaid_map_v1"
+  await prisma.buildingMap.upsert({
+    where: { id: mapId },
+    update: { name: DEFAULT_BUILDING.name, jsonData: DEFAULT_BUILDING as any },
+    create: { id: mapId, name: DEFAULT_BUILDING.name, jsonData: DEFAULT_BUILDING as any },
+  })
+
 }
 
 main()
