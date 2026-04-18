@@ -12,6 +12,32 @@ interface ChatMessage {
   content: string
 }
 
+function parseMarkdown(text: string) {
+  return text.split('\n').map((line, i) => {
+    let isBullet = false;
+    if (line.trim().startsWith('* ')) {
+      isBullet = true;
+      line = line.replace(/^\s*\*\s+/, '');
+    }
+    
+    // Split by **text** to extract bold strings
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    
+    return (
+      <div key={i} className={cn("min-h-[0.5em] mb-1.5 last:mb-0 leading-relaxed", isBullet && "flex gap-2 ml-1")}>
+        {isBullet && <span className="font-black shrink-0">•</span>}
+        <div className="flex-1">
+          {parts.map((p, j) => 
+            p.startsWith('**') && p.endsWith('**') 
+              ? <strong key={j} className="font-bold">{p.slice(2, -2)}</strong> 
+              : p
+          )}
+        </div>
+      </div>
+    )
+  })
+}
+
 export function FloatingChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -135,7 +161,7 @@ export function FloatingChatWidget() {
                     ? "bg-slate-800 text-white rounded-tr-none" 
                     : "bg-white text-slate-800 rounded-tl-none border border-slate-100"
                 )}>
-                  {m.content}
+                  {parseMarkdown(m.content)}
                 </div>
               </div>
             ))}

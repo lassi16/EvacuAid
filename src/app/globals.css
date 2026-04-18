@@ -153,6 +153,11 @@ body {
 @keyframes routingFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .routing-animate-fade-in { animation: routingFadeIn 0.2s ease both; }
 
+@keyframes pageFadeIn { 
+  0% { opacity: 0; filter: blur(4px); transform: scale(0.99); } 
+  100% { opacity: 1; filter: blur(0px); transform: scale(1); } 
+}
+
 /* Step item */
 .routing-step-item {
   display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px;
