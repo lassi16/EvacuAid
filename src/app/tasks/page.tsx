@@ -5,13 +5,12 @@ import {
   Filter,
   MapPin,
   Plus,
-  ChevronRight,
   CheckCircle2,
   Clock,
   MoreHorizontal,
 } from "lucide-react";
 import Link from "next/link";
-import { useIncidentStore, Task, TaskStatus } from "@/stores/incidentStore";
+import { useIncidentStore, TaskStatus } from "@/stores/incidentStore";
 
 const PRIORITY_COLORS = {
   High: {
@@ -45,8 +44,6 @@ const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
   Resolved: <CheckCircle2 className="h-3 w-3" />,
 };
 
-type SortKey = "id" | "priority" | "status";
-
 export default function TasksPage() {
   const { tasks, incidents, updateTaskStatus, pendingTaskCount } =
     useIncidentStore();
@@ -55,8 +52,6 @@ export default function TasksPage() {
     "High" | "Medium" | "Low" | "all"
   >("all");
   const [filterMap, setFilterMap] = useState(false);
-  const [sort, setSort] = useState<SortKey>("id");
-  const [expandedTask, setExpandedTask] = useState<string | null>(null);
 
   // Enrich tasks with incident data
   const enriched = tasks.map((t) => ({
@@ -78,7 +73,7 @@ export default function TasksPage() {
   ).length;
 
   return (
-    <div className="space-y-4 flex flex-col h-full min-w-0">
+    <div className="space-y-4 flex flex-col h-full min-w-0 min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -100,10 +95,7 @@ export default function TasksPage() {
           <Link
             href="/map"
             style={{
-              display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-              padding: "8px 14px",
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 600,
@@ -290,6 +282,7 @@ export default function TasksPage() {
       <div
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
@@ -298,13 +291,15 @@ export default function TasksPage() {
       >
         {filtered.map((task) => {
           const prio = PRIORITY_COLORS[task.priority];
-          const isExpanded = expandedTask === task.id;
           const incident = task.incident;
 
           return (
             <div
               key={task.id}
               style={{
+                width: "100%",
+                minWidth: 0,
+                minHeight: 104,
                 background: "#ffffff",
                 border: "1px solid rgba(14,165,233,0.15)",
                 borderRadius: 10,
@@ -315,282 +310,197 @@ export default function TasksPage() {
               {/* Main row */}
               <div
                 style={{
-                  padding: "12px 16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
+                  padding: "10px 14px",
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  gap: 8,
                   cursor: "pointer",
                 }}
-                onClick={() => setExpandedTask(isExpanded ? null : task.id)}
               >
-                {/* Priority indicator */}
                 <div
                   style={{
-                    width: 3,
-                    height: 36,
-                    borderRadius: 2,
-                    background: prio.text,
-                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    minWidth: 0,
                   }}
-                />
-
-                <div style={{ flex: 1, minWidth: 0 }}>
+                >
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 3,
+                      width: 3,
+                      height: 28,
+                      borderRadius: 2,
+                      background: prio.text,
+                      flexShrink: 0,
                     }}
-                  >
-                    <span
+                  />
+
+                  <div style={{ minWidth: 0 }}>
+                    <div
                       style={{
-                        fontFamily: "monospace",
-                        fontSize: 12,
-                        color: "#0284c7",
-                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        minWidth: 0,
+                        flexWrap: "nowrap",
+                        marginBottom: 3,
                       }}
                     >
-                      {task.id}
-                    </span>
-                    {incident?.mapLinked && (
-                      <span style={{ fontSize: 10, color: "#0284c7" }}>🗺</span>
-                    )}
-                    <span style={{ fontSize: 11, color: "#475569" }}>→</span>
-                    <Link
-                      href="/incidents"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        fontSize: 11,
-                        color: "#0284c7",
-                        textDecoration: "none",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {task.incidentId}
-                    </Link>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: "#0f172a",
-                      fontWeight: 500,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {task.description ??
-                      `Respond to ${incident?.type ?? task.incidentId}`}
-                  </div>
-                </div>
-
-                {/* Assignee */}
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "#94A3B8",
-                    flexShrink: 0,
-                    minWidth: 90,
-                    textAlign: "right",
-                  }}
-                >
-                  {task.assignee}
-                </div>
-
-                {/* Priority badge */}
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "2px 8px",
-                    borderRadius: 999,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    flexShrink: 0,
-                    color: prio.text,
-                    background: prio.bg,
-                    border: `1px solid ${prio.border}`,
-                  }}
-                >
-                  {task.priority}
-                </span>
-
-                {/* Status badge */}
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    flexShrink: 0,
-                    color: STATUS_COLORS[task.status],
-                    background: `${STATUS_COLORS[task.status]}18`,
-                    border: `1px solid ${STATUS_COLORS[task.status]}40`,
-                  }}
-                >
-                  {STATUS_ICONS[task.status]} {task.status}
-                </span>
-
-                <ChevronRight
-                  className="h-4 w-4 text-gray-600 flex-shrink-0"
-                  style={{
-                    transform: isExpanded ? "rotate(90deg)" : "none",
-                    transition: "transform 0.15s",
-                  }}
-                />
-              </div>
-
-              {/* Expanded detail */}
-              {isExpanded && (
-                <div
-                  style={{
-                    padding: "0 16px 14px 16px",
-                    borderTop: "1px solid rgba(14,165,233,0.1)",
-                    paddingTop: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      flexWrap: "wrap",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {incident && (
-                      <>
-                        <div style={{ fontSize: 12, color: "#94A3B8" }}>
-                          <span
-                            style={{
-                              color: "#475569",
-                              fontSize: 10,
-                              textTransform: "uppercase",
-                              display: "block",
-                              marginBottom: 2,
-                            }}
-                          >
-                            Incident Type
-                          </span>
-                          {incident.type}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#94A3B8" }}>
-                          <span
-                            style={{
-                              color: "#475569",
-                              fontSize: 10,
-                              textTransform: "uppercase",
-                              display: "block",
-                              marginBottom: 2,
-                            }}
-                          >
-                            Location
-                          </span>
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <MapPin className="h-3 w-3 text-slate-500" />{" "}
-                            {incident.location}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 12, color: "#94A3B8" }}>
-                          <span
-                            style={{
-                              color: "#475569",
-                              fontSize: 10,
-                              textTransform: "uppercase",
-                              display: "block",
-                              marginBottom: 2,
-                            }}
-                          >
-                            Team
-                          </span>
-                          {incident.team}
-                        </div>
-                      </>
-                    )}
-                    <div style={{ fontSize: 12, color: "#94A3B8" }}>
                       <span
                         style={{
-                          color: "#475569",
-                          fontSize: 10,
-                          textTransform: "uppercase",
-                          display: "block",
-                          marginBottom: 2,
+                          fontFamily: "monospace",
+                          fontSize: 12,
+                          color: "#0284c7",
+                          fontWeight: 600,
                         }}
                       >
-                        Created
+                        {task.id}
                       </span>
-                      {task.createdAt}
+                      {incident?.mapLinked && (
+                        <span style={{ fontSize: 10, color: "#0284c7" }}>🗺</span>
+                      )}
+                      <span style={{ fontSize: 11, color: "#475569" }}>→</span>
+                      <Link
+                        href="/incidents"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          fontSize: 11,
+                          color: "#0284c7",
+                          textDecoration: "none",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {task.incidentId}
+                      </Link>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "#0f172a",
+                        fontWeight: 500,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        minWidth: 0,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {task.description ??
+                        `Respond to ${incident?.type ?? task.incidentId}`}
                     </div>
                   </div>
+                </div>
 
-                  {/* Status quick-set */}
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {(
-                      [
-                        "New",
-                        "In Progress",
-                        "Acknowledged",
-                        "Resolved",
-                      ] as TaskStatus[]
-                    ).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => updateTaskStatus(task.id, s)}
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          background:
-                            task.status === s
-                              ? `${STATUS_COLORS[s]}20`
-                              : "transparent",
-                          color:
-                            task.status === s ? STATUS_COLORS[s] : "#475569",
-                          border: `1px solid ${task.status === s ? STATUS_COLORS[s] + "60" : "rgba(14,165,233,0.15)"}`,
-                          transition: "all 0.15s",
-                        }}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                    {incident?.mapLinked && (
-                      <Link
-                        href="/map"
-                        style={{
-                          marginLeft: "auto",
-                          padding: "5px 10px",
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          textDecoration: "none",
-                          color: "#0284c7",
-                          background: "rgba(14,165,233,0.15)",
-                          border: "1px solid rgba(14,165,233,0.3)",
-                        }}
-                      >
-                        🗺 View on Map
-                      </Link>
-                    )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    minWidth: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#475569",
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {task.assignee}
+                  </div>
+
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                      lineHeight: 1,
+                      color: prio.text,
+                      background: prio.bg,
+                      border: `1px solid ${prio.border}`,
+                    }}
+                  >
+                    {task.priority}
+                  </span>
+
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      flexShrink: 0,
+                      lineHeight: 1,
+                      color: STATUS_COLORS[task.status],
+                      background: `${STATUS_COLORS[task.status]}18`,
+                      border: `1px solid ${STATUS_COLORS[task.status]}40`,
+                    }}
+                  >
+                    {STATUS_ICONS[task.status]} {task.status}
+                  </span>
+
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontFamily: "monospace",
+                      color: "#475569",
+                      flexShrink: 0,
+                      whiteSpace: "nowrap",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {task.createdAt}
+                  </div>
+
+                </div>
+
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    minWidth: 0,
+                    minHeight: 40,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#475569",
+                      lineHeight: 1.5,
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      flex: 1,
+                      minWidth: 0,
+                    }}
+                  >
+                    {incident?.description ??
+                      `Assigned response for ${task.incidentId}.`}
                   </div>
                 </div>
-              )}
+              </div>
+
             </div>
           );
         })}
         {filtered.length === 0 && (
           <div style={{ textAlign: "center", color: "#475569", padding: 60 }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+                          minHeight: 24,
             No tasks match your filters.
           </div>
         )}

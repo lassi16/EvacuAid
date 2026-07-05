@@ -7,10 +7,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
-import { useIncidentStore, Notification } from "@/stores/incidentStore";
+import { useIncidentStore } from "@/stores/incidentStore";
 
 const ROLE_COLORS: Record<string, string> = {
   "Global Admin": "#0284c7",
@@ -60,7 +59,6 @@ export default function NotificationsPage() {
   const [filterAck, setFilterAck] = useState<"all" | "ack" | "unack">("all");
   const [filterEsc, setFilterEsc] = useState(false);
   const [filterMap, setFilterMap] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   // Enrich with incident data
   const enriched = notifications.map((n) => ({
@@ -99,7 +97,7 @@ export default function NotificationsPage() {
   ).length;
 
   return (
-    <div className="space-y-4 flex flex-col h-full min-w-0">
+    <div className="space-y-4 flex flex-col h-full min-w-0 min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -307,6 +305,7 @@ export default function NotificationsPage() {
       <div
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
@@ -317,13 +316,15 @@ export default function NotificationsPage() {
           const incSev = n.incident
             ? INCIDENT_SEVERITY_COLORS[n.incident.severity]
             : null;
-          const isExpanded = expanded === n.id;
           const roleColor = ROLE_COLORS[n.role] ?? "#94A3B8";
 
           return (
             <div
               key={n.id}
               style={{
+                width: "100%",
+                minWidth: 0,
+                minHeight: 96,
                 background: n.opened ? "#ffffff" : "#f0f9ff",
                 border: n.escalated
                   ? "1px solid rgba(239,68,68,0.35)"
@@ -333,22 +334,26 @@ export default function NotificationsPage() {
                 borderRadius: 10,
                 overflow: "hidden",
                 transition: "border-color 0.15s",
+                padding: "10px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                if (!n.opened) markNotificationRead(n.id);
               }}
             >
               <div
                 style={{
-                  padding: "12px 16px",
                   display: "flex",
                   alignItems: "center",
                   gap: 12,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  if (!n.opened) markNotificationRead(n.id);
-                  setExpanded(isExpanded ? null : n.id);
+                  flexWrap: "nowrap",
+                  minWidth: 0,
+                  minHeight: 28,
                 }}
               >
-                {/* Unread dot */}
                 <div
                   style={{
                     width: 8,
@@ -362,10 +367,17 @@ export default function NotificationsPage() {
                   }}
                 />
 
-                {/* User + Role */}
-                <div style={{ minWidth: 140, flexShrink: 0 }}>
+                <div style={{ minWidth: 0, flex: "1 1 260px" }}>
                   <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.25,
+                    }}
                   >
                     {n.user}
                   </div>
@@ -376,14 +388,17 @@ export default function NotificationsPage() {
                       color: roleColor,
                       textTransform: "uppercase",
                       letterSpacing: "0.04em",
-                      marginTop: 1,
+                      marginTop: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.15,
                     }}
                   >
                     {n.role}
                   </div>
                 </div>
 
-                {/* Incident badge */}
                 <div style={{ flexShrink: 0 }}>
                   {n.incident && incSev ? (
                     <span
@@ -395,13 +410,13 @@ export default function NotificationsPage() {
                         borderRadius: 6,
                         fontSize: 10,
                         fontWeight: 700,
+                        lineHeight: 1,
                         color: incSev.text,
                         background: incSev.bg,
                         border: `1px solid ${incSev.border}`,
                       }}
                     >
-                      {n.incidentId} · {n.incident.type}{" "}
-                      {n.incident.mapLinked ? "🗺" : ""}
+                      {n.incidentId} · {n.incident.type} {n.incident.mapLinked ? "🗺" : ""}
                     </span>
                   ) : (
                     <span
@@ -409,6 +424,7 @@ export default function NotificationsPage() {
                         fontSize: 11,
                         fontFamily: "monospace",
                         color: "#475569",
+                        lineHeight: 1,
                       }}
                     >
                       {n.incidentId}
@@ -416,22 +432,18 @@ export default function NotificationsPage() {
                   )}
                 </div>
 
-                {/* Message preview */}
-                <div
-                  style={{
-                    flex: 1,
-                    fontSize: 12,
-                    color: "#94A3B8",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                  }}
-                >
-                  {n.message}
-                </div>
+              </div>
 
-                {/* Time */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  minWidth: 0,
+                  minHeight: 24,
+                }}
+              >
                 <div
                   style={{
                     fontSize: 11,
@@ -443,7 +455,6 @@ export default function NotificationsPage() {
                   {n.time}
                 </div>
 
-                {/* ACK icon */}
                 <div style={{ flexShrink: 0 }}>
                   {n.ack ? (
                     <CheckCircle2 className="h-4 w-4 text-green-400" />
@@ -452,7 +463,6 @@ export default function NotificationsPage() {
                   )}
                 </div>
 
-                {/* Escalated badge */}
                 {n.escalated && (
                   <span
                     style={{
@@ -475,150 +485,24 @@ export default function NotificationsPage() {
                   </span>
                 )}
 
-                <ChevronDown
-                  className="h-4 w-4 text-gray-600 flex-shrink-0"
-                  style={{
-                    transform: isExpanded ? "rotate(180deg)" : "none",
-                    transition: "transform 0.15s",
-                  }}
-                />
-              </div>
-
-              {/* Expanded detail */}
-              {isExpanded && (
                 <div
                   style={{
-                    padding: "0 16px 14px",
-                    borderTop: "1px solid rgba(14,165,233,0.1)",
-                    paddingTop: 12,
+                    fontSize: 12,
+                    color: "#475569",
+                    lineHeight: 1.35,
+                    overflow: "hidden",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    flex: 1,
+                    minWidth: 0,
+                    minHeight: 24,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#94A3B8",
-                      background: "#f8fafc",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      marginBottom: 12,
-                      lineHeight: 1.6,
-                      border: "1px solid rgba(14,165,233,0.1)",
-                    }}
-                  >
-                    {n.message}
-                  </div>
-
-                  {n.incident && (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 16,
-                        flexWrap: "wrap",
-                        marginBottom: 12,
-                        fontSize: 12,
-                        color: "#94A3B8",
-                      }}
-                    >
-                      <div>
-                        <span
-                          style={{
-                            color: "#475569",
-                            fontSize: 10,
-                            textTransform: "uppercase",
-                            display: "block",
-                            marginBottom: 2,
-                          }}
-                        >
-                          Location
-                        </span>
-                        {n.incident.location}
-                      </div>
-                      <div>
-                        <span
-                          style={{
-                            color: "#475569",
-                            fontSize: 10,
-                            textTransform: "uppercase",
-                            display: "block",
-                            marginBottom: 2,
-                          }}
-                        >
-                          Severity
-                        </span>
-                        <span style={{ color: incSev?.text }}>
-                          {n.incident.severity.toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <span
-                          style={{
-                            color: "#475569",
-                            fontSize: 10,
-                            textTransform: "uppercase",
-                            display: "block",
-                            marginBottom: 2,
-                          }}
-                        >
-                          Inc. Status
-                        </span>
-                        {n.incident.status}
-                      </div>
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {!n.ack && (
-                      <button
-                        onClick={() => acknowledgeNotification(n.id)}
-                        style={{
-                          padding: "6px 14px",
-                          borderRadius: 7,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          background: "rgba(52,211,153,0.15)",
-                          color: "#34D399",
-                          border: "1px solid rgba(52,211,153,0.3)",
-                        }}
-                      >
-                        ✓ Acknowledge
-                      </button>
-                    )}
-                    {n.incident?.mapLinked && (
-                      <Link
-                        href="/map"
-                        style={{
-                          padding: "6px 14px",
-                          borderRadius: 7,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          background: "rgba(14,165,233,0.15)",
-                          color: "#0284c7",
-                          border: "1px solid rgba(14,165,233,0.3)",
-                          textDecoration: "none",
-                        }}
-                      >
-                        🗺 View on Map
-                      </Link>
-                    )}
-                    <Link
-                      href="/incidents"
-                      style={{
-                        padding: "6px 14px",
-                        borderRadius: 7,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        background: "transparent",
-                        color: "#475569",
-                        border: "1px solid rgba(14,165,233,0.1)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      → Incident Detail
-                    </Link>
-                  </div>
+                  {n.message}
                 </div>
-              )}
+              </div>
+
             </div>
           );
         })}
